@@ -2,20 +2,56 @@
 
 Standalone release of the cLFR consensus FASTA workflow extracted from [LFR_Pipeline](https://github.com/Complete-Genomics/LFR_Pipeline).
 
-This release keeps the full FASTQ-to-consensus path needed for cLFR consensus fragment generation:
+This release keeps the full FASTQ-to-consensus path needed for cLFR consensus fragment generation.
 
-```text
-read1/read2 FASTQ
-  -> cLFR barcode split
-  -> mapping
-  -> mark duplicates
-  -> duplicate-marked BAM index
-  -> duplicate handling
-  -> per-chromosome BAM split
-  -> barcode-grouped name sort
-  -> per-barcode consensus FASTA
-  -> merged consensus.fasta
-  -> basic FASTA length metrics
+```mermaid
+flowchart TD
+    raw(["Raw FASTQ
+read_1 · read_2"])
+    stage["stage_fastqs
+data/read_N.fq.gz"]
+
+    subgraph SP["scripts / splitreads"]
+        split["split_barcode_stLFR.py
+Split random UMI
+split_read.N.fq.gz"]
+    end
+
+    subgraph MAP["workflow / mapping"]
+        map["map_reads
+STAR / HISAT2 / minimap2 / BWA
+keep/Align/id.sort.bam"]
+        mark["mark_dups
+GATK MarkDuplicates
+id.sort.markdup.bam"]
+        dedup["duplicate handling
+removedup_rm000.bam"]
+    end
+
+    subgraph CF["scripts / consensus_fasta"]
+        splitbam["split_chrom_bam
+per-chromosome BAM"]
+        reformat["reformat_readid
+barcode-grouped read names"]
+        sortname["sort_reformatted_bam
+name-sorted BAM"]
+        consensus["consensus_fasta.py
+per-barcode consensus FASTA"]
+        fix["fix_consensus_format
+remove N bases"]
+        merge["merge_consensus_fasta
+consensus.fasta"]
+        metrics["exon2fasta.py
+length distribution PDF"]
+    end
+
+    raw --> stage --> split --> map --> mark --> dedup
+    dedup --> splitbam --> reformat --> sortname --> consensus --> fix --> merge --> metrics
+
+    classDef core fill:#eef6e8,stroke:#7aa65a,color:#1f3d17
+    classDef output fill:#dce8f5,stroke:#6ca3c8,color:#1a3a5c
+    class raw,stage,split,map,mark,dedup,splitbam,reformat,sortname,consensus,fix core
+    class merge,metrics output
 ```
 
 It intentionally excludes unrelated full-pipeline branches such as variant calling, benchmarking, 16S analysis, de novo assembly, and full summary-report generation.
