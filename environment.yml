@@ -1,0 +1,22 @@
+name: clfr-consensus-fasta
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>=3.10
+  - snakemake-minimal
+  - samtools>=1.22
+  - stringtie
+  - star
+  - hisat2
+  - minimap2
+  - bwa
+  - gatk4
+  - pigz
+  - pysam
+  - biopython
+  - pandas
+  - numpy
+  - matplotlib
+  - seaborn
+  - plotly
