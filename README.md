@@ -5,7 +5,7 @@ Standalone release of the cLFR consensus FASTA workflow extracted from [LFR_Pipe
 This release keeps the full FASTQ-to-consensus path needed for cLFR consensus fragment generation.
 
 ```mermaid
-flowchart TD
+flowchart LR
     raw(["Raw FASTQ
 read_1 · read_2"])
     stage["stage_fastqs
