@@ -78,11 +78,6 @@ rule split_reads:
         additional_bc_len=config["params"].get("additional_bc_len", 0),
         gdna_start_r1=config["params"].get("gdna_start_r1", 1),
         additional_bc_len_r1=config["params"].get("additional_bc_len_r1", 0),
-        reverse_complement=lambda wildcards: (
-            "--reverse_complement"
-            if config["params"].get("reverse_complement_umi", False)
-            else ""
-        ),
         pigz=config["tools"].get("pigz", "pigz"),
     shell:
         """
@@ -100,7 +95,6 @@ rule split_reads:
             --gdna_start_r1 {params.gdna_start_r1} \
             --read_len_r1 {params.read_len_r1} \
             --additional_bc_len_r1 {params.additional_bc_len_r1} \
-            {params.reverse_complement} \
             --threads {threads} \
             --pigz {params.pigz} \
             2> data/split_stat_read.err
