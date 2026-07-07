@@ -71,9 +71,9 @@ cLFR_Release/
 ```
 ### Requirements
 **Hardware requirements**  
-Minimum 256GB RAM\  
+Minimum 256GB RAM  
 **Software requirements**  
-Linux CentOS >=7\  
+Linux CentOS >=7  
 
 ## Install
 
