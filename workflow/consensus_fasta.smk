@@ -29,9 +29,15 @@ rule all:
         f"{CONSENSUS_DIR}/consensus_frag_length_distribution.pdf",
 
 
+def input_read1(wildcards):
+    if SEQUENCE_TYPE == "pe":
+        return config["inputs"]["read1"]
+    return []
+
+
 rule stage_fastqs:
     input:
-        read1=config["inputs"].get("read1", ""),
+        read1=input_read1,
         read2=config["inputs"]["read2"],
     output:
         read1="data/read_1.fq.gz",

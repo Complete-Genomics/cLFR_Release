@@ -1,3 +1,5 @@
 __pycache__/
 *.py[cod]
 memory/
+test/
+.DS_Store
