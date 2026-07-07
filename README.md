@@ -54,8 +54,6 @@ length distribution PDF"]
     class merge,metrics output
 ```
 
-It intentionally excludes unrelated full-pipeline branches such as variant calling, benchmarking, 16S analysis, de novo assembly, and full summary-report generation.
-
 ## Contents
 
 ```text
@@ -72,10 +70,10 @@ cLFR_Release/
 └── environment.yml
 ```
 ### Requirements
-***Hardware requirements***
-Minimum 256GB RAM 
-***Software requirements***
-Linux CentOS >=7
+**Hardware requirements**  
+Minimum 256GB RAM\  
+**Software requirements**  
+Linux CentOS >=7\  
 
 ## Install
 
@@ -150,7 +148,7 @@ snakemake -s ${smk} --cores ${num_cpu} -p -k 2> consensus.err.txt
 Main output:
 
 ```text
-Align/consensus/consensus.fasta
+Align/consensus/consensus.fixRC.fasta
 ```
 
 Additional outputs include:
