@@ -101,17 +101,52 @@ rule split_reads:
         """
 
 
+rule trim_reads:
+    input:
+        read1="data/split_read.1.fq.gz",
+        read2="data/split_read.2.fq.gz",
+    output:
+        read1="data/split_read_1_trimmed.fastq.gz",
+        read2="data/split_read_2_trimmed.fastq.gz",
+    params:
+        bbduk=config["tools"].get("bbduk", "bbduk.sh"),
+        sequence_type=SEQUENCE_TYPE,
+    shell:
+        """
+        if [[ "{params.sequence_type}" == "pe" ]]; then
+            {params.bbduk} in1={input.read1} in2={input.read2} out1={output.read1} out2={output.read2} qtrim=rl
+        elif [[ "{params.sequence_type}" == "se" ]]; then
+            {params.bbduk} in={input.read2} out={output.read2} qtrim=rl && touch {output.read1}
+        else
+            echo "Unknown sequence_type: {params.sequence_type}" >&2
+            exit 1
+        fi
+        """
+
+
 def mapping_ref(wildcards):
     if MAPPER in ("bwa", "minimap2"):
         return config["mapping"].get("ref_fasta", config["paths"]["ref_fasta"])
     return []
 
 
+def mapping_read1(wildcards):
+    if MAPPER == "minimap2":
+        return "data/split_read_1_trimmed.fastq.gz"
+    return "data/split_read.1.fq.gz"
+
+
+def mapping_read2(wildcards):
+    if MAPPER == "minimap2":
+        return "data/split_read_2_trimmed.fastq.gz"
+    return "data/split_read.2.fq.gz"
+
+
 rule map_reads:
     input:
         ref=mapping_ref,
-        read1="data/split_read.1.fq.gz",
-        read2="data/split_read.2.fq.gz",
+        read1=mapping_read1,
+        read2=mapping_read2,
     output:
         bam=f"{KEEP_ALIGN_DIR}/{SAMPLE_ID}.sort.bam",
     threads:
@@ -128,6 +163,7 @@ rule map_reads:
         minimap2=config["tools"].get("minimap2", "minimap2"),
         minimap2_preset=config["mapping"].get("minimap2_preset", "splice:sr"),
         minimap2_anno_bed=config["mapping"].get("minimap2_anno_bed", ""),
+        minimap2_sort_mem=config["mapping"].get("minimap2_sort_mem", "2G"),
         samtools=config["tools"].get("samtools", "samtools"),
         mapper=MAPPER,
         sequence_type=SEQUENCE_TYPE,
@@ -179,6 +215,8 @@ rule map_reads:
                 | {params.samtools} sort -o {output.bam} -@ {threads} -O bam -
             fi
         elif [ "{params.mapper}" = "minimap2" ]; then
+            SORT_TMP=/dev/shm/minimap_tmp_$$
+            mkdir -p $SORT_TMP
             bed_arg=""
             if [ -n "{params.minimap2_anno_bed}" ]; then
                 bed_arg="--junc-bed {params.minimap2_anno_bed}"
@@ -187,7 +225,10 @@ rule map_reads:
                 -t {threads} --secondary=no --sam-hit-only \
                 $bed_arg {input.ref} {input.read2} \
             | {params.samtools} view -@ 4 -b - \
-            | {params.samtools} sort -@ {threads} -o {output.bam} -
+            | {params.samtools} sort -@ {threads} -m {params.minimap2_sort_mem} \
+                -T $SORT_TMP/sort \
+                -o {output.bam} -
+            rm -rf $SORT_TMP
         elif [ "{params.mapper}" = "bwa" ]; then
             rg="@RG\tID:{params.sample_id}\tSM:{params.sample_id}\tPL:{params.platform}"
             if [ "{params.sequence_type}" = "pe" ]; then

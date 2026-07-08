@@ -5,32 +5,35 @@ chroms:
   - chr1
 
 inputs:
-  read1: /path/to/read_1.fq.gz
-  read2: /path/to/read_2.fq.gz
+  read1: 
+  read2: read_2.fq.gz
 
 paths:
   output_dir: Align
   # Genome FASTA used by samtools consensus. For STAR/HISAT2, this is still
   # needed after mapping for consensus sequence generation.
-  ref_fasta: /path/to/genome.fa
+  ref_fasta: /home-03/ycai/legacy_home/branch/master/dev/CGI_WGS_Pipeline/Data_and_Tools/data/hg38/GCA_000001405.15_GRCh38_no_alt_analysis_set.ercc.fa
+  # Reference used by minimap2 to infer consensus FASTA direction. Defaults to ref_fasta if omitted.
+  consensus_direction_ref_fasta: /home-03/ycai/legacy_home/branch/master/dev/CGI_WGS_Pipeline/Data_and_Tools/data/hg38/ERCC/GRCh38_latest_rna.fna.ercc.fasta
 
 # For SE600 use minimap2; for PE150 use hisat2.
 mapping:
   # Supported: star, hisat2, minimap2, bwa
-  mapper: star
+  mapper: minimap2
   # ref_fasta is only needed for bwa/minimap2; STAR/HISAT2 use their indexes.
   # ref_fasta: /path/to/mapping_genome.fa
 
   # STAR
-  star_index: /path/to/star_index
+  star_index: /home-03/ycai/legacy_home/branch/master/dev/CGI_WGS_Pipeline/Data_and_Tools/data/hg38/STARercc
 
   # HISAT2
-  hisat2_index: /path/to/hisat2_index
-  hisat2_splicesites: /path/to/splicesites.txt
+  hisat2_index: /home-03/ycai/legacy_home/branch/master/dev/CGI_WGS_Pipeline/Data_and_Tools/data/grch38_tran/genome_tran
+  hisat2_splicesites: /home-03/ycai/legacy_home/branch/master/dev/CGI_WGS_Pipeline/Data_and_Tools/data/grch38_tran/splicesites.txt
 
   # minimap2
   minimap2_preset: splice:sr
   minimap2_anno_bed: ""
+  minimap2_sort_mem: 2G
 
   # BWA
   bwa_mem: mem
@@ -45,24 +48,24 @@ tools:
   minimap2: minimap2
   bwa: bwa
   gatk: gatk
+  bbduk: bbduk.sh
 
 params:
-  sequence_type: pe
+  sequence_type: se
   platform: BGI-seq
 
   # cLFR random barcode/UMI parsing.
   bc_condition: random_bc
   umi_len: 15
   bc_len_redundant: 15
-  bc_start: 0
-  gdna_start: 1
-  read_len: 150
-  read_len_r1: 150
+  bc_start: 11
+  gdna_start: 26
+  read_len: 600
+  read_len_r1: 0
   gdna_start_r1: 1
   additional_bc_start: 0
   additional_bc_len: 0
   additional_bc_len_r1: 0
-  reverse_complement_umi: false
 
   # Consensus generation.
   min_reads: 50
@@ -73,6 +76,9 @@ params:
   temp_dir: /dev/shm/consensus
   # Pass -T ref.fa to samtools consensus. Disabled by default because it can be slow.
   use_samtools_reference: false
+  correct_rc: true
+  flank_end: 30
+  adapter_seq: "CTCAGCAGAGGG"
 
 threads:
   split: 8

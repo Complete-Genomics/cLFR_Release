@@ -131,10 +131,7 @@ def get_idx(dict_file, split_index, chrom, num_splits):
                 mapped_reads = int(fields[2])
                 chunk = mapped_reads//num_splits
                 start_index = split_index*chunk+1
-                if split_index == num_splits - 1:
-                    end_index = mapped_reads
-                else:
-                    end_index = (split_index+1)*chunk
+                end_index = (split_index+1)*chunk
                 return start_index, end_index
 
     raise ValueError(f"Chromosome '{chrom}' was not found in idxstats file '{dict_file}'.")
