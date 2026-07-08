@@ -85,7 +85,7 @@ mamba env create -f environment.yml
 mamba activate clfr-consensus-fasta
 ```
 
-The environment includes Snakemake, Python, GATK4, samtools, stringtie, pigz, pysam, Biopython, and the supported mappers. `samtools>=1.22` is recommended because this workflow can optionally use `samtools consensus -T`.
+The environment includes Snakemake, Python, GATK4, samtools, stringtie, pigz, BBDuk/bbmap, pysam, Biopython, and the supported mappers. `samtools>=1.22` is recommended because this workflow can optionally use `samtools consensus -T`.
 
 ## Configure
 
