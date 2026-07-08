@@ -25,7 +25,7 @@ MAPPER = config["mapping"].get("mapper", "star").lower()
 
 rule all:
     input:
-        f"{CONSENSUS_DIR}/consensus.fasta",
+        f"{CONSENSUS_DIR}/consensus.fixRC.fasta",
         f"{CONSENSUS_DIR}/consensus_frag_length_distribution.pdf",
 
 
@@ -397,9 +397,52 @@ rule merge_consensus_fasta:
         "mkdir -p {CONSENSUS_DIR} && cat {input} > {output}"
 
 
+rule map_fasta_consensus:
+    input:
+        f"{CONSENSUS_DIR}/consensus.fasta"
+    output:
+        f"{CONSENSUS_DIR}/consensus.paf"
+    threads:
+        config["threads"].get("mapping", 16)
+    params:
+        minimap2=config["tools"].get("minimap2", "minimap2"),
+        ref=config["paths"].get("consensus_direction_ref_fasta", config["paths"]["ref_fasta"])
+    shell:
+        "{params.minimap2} -x asm20 -t {threads} {params.ref} {input} > {output}"
+
+
+rule correct_direction_consensus:
+    input:
+        fasta=f"{CONSENSUS_DIR}/consensus.fasta",
+        paf=f"{CONSENSUS_DIR}/consensus.paf"
+    output:
+        fasta=f"{CONSENSUS_DIR}/consensus.fixRC.fasta",
+        not_mapped=f"{CONSENSUS_DIR}/frag_not_in_mapped.fixRC.fasta"
+    params:
+        python=config["tools"].get("python", "python"),
+        correct_rc=config["params"].get("correct_rc", True),
+        umi_len=config["params"].get("umi_len", 15),
+        adapter_seq=config["params"].get("adapter_seq", ""),
+        flank_end=config["params"].get("flank_end", 0)
+    run:
+        if params.correct_rc:
+            shell(
+                "{params.python} {SCRIPT_DIR}/fix_fasta_direction.py "
+                "--input_fasta {input.fasta} "
+                "--paf {input.paf} "
+                "--output_fasta {output.fasta} "
+                "--not_mapped_fasta {output.not_mapped} "
+                "--umi_len {params.umi_len} "
+                "--adapter_seq '{params.adapter_seq}' "
+                "--flank_end {params.flank_end}"
+            )
+        else:
+            shell("cp {input.fasta} {output.fasta} && : > {output.not_mapped}")
+
+
 rule fasta_frag_len_distribution_consensus:
     input:
-        f"{CONSENSUS_DIR}/consensus.fasta",
+        f"{CONSENSUS_DIR}/consensus.fixRC.fasta",
     output:
         f"{CONSENSUS_DIR}/consensus_frag_length_distribution.pdf",
     params:

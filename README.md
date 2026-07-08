@@ -41,17 +41,19 @@ per-barcode consensus FASTA"]
 remove N bases"]
         merge["merge_consensus_fasta
 consensus.fasta"]
+        orient["correct_direction_consensus
+consensus.fixRC.fasta"]
         metrics["exon2fasta.py
 length distribution PDF"]
     end
 
     raw --> stage --> split --> map --> mark --> dedup
-    dedup --> splitbam --> reformat --> sortname --> consensus --> fix --> merge --> metrics
+    dedup --> splitbam --> reformat --> sortname --> consensus --> fix --> merge --> orient --> metrics
 
     classDef core fill:#eef6e8,stroke:#7aa65a,color:#1f3d17
     classDef output fill:#dce8f5,stroke:#6ca3c8,color:#1a3a5c
-    class raw,stage,split,map,mark,dedup,splitbam,reformat,sortname,consensus,fix core
-    class merge,metrics output
+    class raw,stage,split,map,mark,dedup,splitbam,reformat,sortname,consensus,fix,merge core
+    class orient,metrics output
 ```
 
 ## Contents
@@ -64,6 +66,7 @@ cLFR_Release/
 │   ├── split_barcode_stLFR.py
 │   ├── consensus_fasta.py
 │   ├── consensus_fasta_supp.py
+│   ├── fix_fasta_direction.py
 │   └── exon2fasta.py
 ├── workflow/
 │   └── consensus_fasta.smk
@@ -99,6 +102,7 @@ inputs:
 paths:
   output_dir: Align
   ref_fasta: /path/to/genome.fa
+  consensus_direction_ref_fasta: /path/to/transcriptome_or_genome.fa
 
 # For SE600 use minimap2; for PE150 use hisat2.
 mapping:
@@ -115,6 +119,9 @@ params:
   min_reads: 50
   num_splits: 5
   use_samtools_reference: false
+  correct_rc: true
+  flank_end: 30
+  adapter_seq: "CTCAGCAGAGGG"
 ```
 
 Key settings:
@@ -123,6 +130,7 @@ Key settings:
 - `chroms`: contigs to emit consensus FASTA from; names must match the mapping reference and BAM contigs.
 - `paths.output_dir`: main output directory, default `Align`.
 - `paths.ref_fasta`: genome FASTA used by `samtools consensus` during consensus generation. This is still required for consensus even when mapping uses STAR or HISAT2 indexes.
+- `paths.consensus_direction_ref_fasta`: optional FASTA used by minimap2 to infer consensus FASTA orientation; defaults to `paths.ref_fasta` when omitted.
 - `mapping.mapper`: one of `star`, `hisat2`, `minimap2`, or `bwa`.
 - `mapping.ref_fasta`: optional mapping reference FASTA for `bwa` and `minimap2`; defaults to `paths.ref_fasta` when omitted. Do not set it for STAR/HISAT2 unless you also use it as documentation for the index source.
 - `mapping.star_index`: required when `mapping.mapper: star`.
@@ -135,6 +143,8 @@ Key settings:
 - `params.min_reads`: minimum reads required for one barcode group to generate consensus.
 - `params.num_splits`: per-chromosome read-count chunks used to parallelize consensus generation.
 - `params.use_samtools_reference`: default `false`. When enabled, `samtools consensus -T <ref.fa>` fills zero-coverage bases from the reference, but it can add substantial runtime/I/O cost, so the release keeps it off by default.
+- `params.correct_rc`: default `true`; maps `consensus.fasta` back to `paths.consensus_direction_ref_fasta` and writes `consensus.fixRC.fasta`.
+- `params.adapter_seq` and `params.flank_end`: optional adapter-based direction cleanup after PAF-based correction.
 
 ## Run
 
@@ -161,6 +171,9 @@ keep/Align/{sample_id}.sort.markdup.bam
 Align/{sample_id}_dedup_metrics.txt
 Align/{sample_id}.sort.removedup_rm000.bam
 Make_Vcf/step3_hapcut/step1_modify_bam/{sample_id}_sort.markdup_{chrom}.bam
+Align/consensus/consensus.fasta
+Align/consensus/consensus.paf
+Align/consensus/frag_not_in_mapped.fixRC.fasta
 Align/consensus/consensus_frag_length_distribution.pdf
 Align/consensus/frag_length_distribution.txt
 ```
@@ -186,6 +199,8 @@ Then run the workflow on a small FASTQ pair and confirm:
 
 ```text
 Align/consensus/consensus.fasta
+Align/consensus/consensus.paf
+Align/consensus/consensus.fixRC.fasta
 Align/consensus/consensus_frag_length_distribution.pdf
 Align/consensus/frag_length_distribution.txt
 ```
