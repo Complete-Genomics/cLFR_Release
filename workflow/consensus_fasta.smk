@@ -81,7 +81,7 @@ rule split_reads:
         pigz=config["tools"].get("pigz", "pigz"),
     shell:
         """
-        {params.python} {SCRIPT_DIR}/split_barcode_stLFR.py \
+        {params.python} {SCRIPT_DIR}/split_barcode_LFR.py \
             --r1 {input.read1} \
             --r2 {input.read2} \
             --read_len {params.read_len} \

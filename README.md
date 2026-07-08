@@ -12,7 +12,7 @@ read_1 · read_2"])
 data/read_N.fq.gz"]
 
     subgraph SP["scripts / splitreads"]
-        split["split_barcode_stLFR.py
+        split["split_barcode_LFR.py
 Split random UMI
 split_read.N.fq.gz"]
     end
@@ -63,7 +63,7 @@ cLFR_Release/
 ├── config/
 │   └── consensus_fasta.yaml
 ├── scripts/
-│   ├── split_barcode_stLFR.py
+│   ├── split_barcode_LFR.py
 │   ├── consensus_fasta.py
 │   ├── consensus_fasta_supp.py
 │   ├── fix_fasta_direction.py
