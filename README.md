@@ -93,9 +93,12 @@ Copy [config/consensus_fasta.yaml](config/consensus_fasta.yaml) to your run fold
 
 ```yaml
 sample_id: data
-chroms: [chr1, chr2]
+chroms:
+  - chr1
 
 inputs:
+  # Input FASTQ files. If read headers already contain UMI/barcode strings,
+  # split_reads will skip barcode splitting automatically.
   read1: /path/to/read_1.fq.gz
   read2: /path/to/read_2.fq.gz
 
@@ -126,7 +129,7 @@ params:
 
 Key settings:
 
-- `inputs.read1/read2`: raw input FASTQ files. For single-end data, set `params.sequence_type: se`; `read1` may be blank, and the workflow processes `read2`.
+- `inputs.read1/read2`: input FASTQ files. For single-end data, set `params.sequence_type: se`; `read1` may be blank, and the workflow processes `read2`. If the first `read2` FASTQ header already contains a UMI/barcode string such as `#ACGT.../2`, `split_reads` skips barcode splitting and uses the input FASTQ directly.
 - `chroms`: contigs to emit consensus FASTA from; names must match the mapping reference and BAM contigs.
 - `paths.output_dir`: main output directory, default `Align`.
 - `paths.ref_fasta`: genome FASTA used by `samtools consensus` during consensus generation. This is still required for consensus even when mapping uses STAR or HISAT2 indexes.
