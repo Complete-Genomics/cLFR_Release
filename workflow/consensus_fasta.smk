@@ -79,25 +79,38 @@ rule split_reads:
         gdna_start_r1=config["params"].get("gdna_start_r1", 1),
         additional_bc_len_r1=config["params"].get("additional_bc_len_r1", 0),
         pigz=config["tools"].get("pigz", "pigz"),
+        sequence_type=SEQUENCE_TYPE,
     shell:
         """
-        {params.python} {SCRIPT_DIR}/split_barcode_LFR.py \
-            --r1 {input.read1} \
-            --r2 {input.read2} \
-            --read_len {params.read_len} \
-            --output data/split_read \
-            --cbc_len {params.cbc_len} \
-            --bc_len_redundant {params.bc_len_redundant} \
-            --bc_start {params.bc_start} \
-            --gdna_start {params.gdna_start} \
-            --additional_bc_start {params.additional_bc_start} \
-            --additional_bc_len {params.additional_bc_len} \
-            --gdna_start_r1 {params.gdna_start_r1} \
-            --read_len_r1 {params.read_len_r1} \
-            --additional_bc_len_r1 {params.additional_bc_len_r1} \
-            --threads {threads} \
-            --pigz {params.pigz} \
-            2> data/split_stat_read.err
+        mkdir -p data
+        is_split=$({params.python} -c 'import gzip,re,sys; path=sys.argv[1]; umi_len=int(sys.argv[2]); opener=gzip.open if path.endswith((".gz", ".gzip")) else open; handle=opener(path, "rt", errors="replace"); header=handle.readline().strip(); handle.close(); print(1 if re.search(r"#[ACGTNacgtn]{{%d,}}(?:[#/\\s]|$)" % umi_len, header) else 0)' {input.read2} {params.cbc_len})
+        if [ "$is_split" = "1" ]; then
+            if [ "{params.sequence_type}" = "pe" ]; then
+                ln -sf "$(realpath {input.read1})" {output.read1}
+            else
+                : > {output.read1}
+            fi
+            ln -sf "$(realpath {input.read2})" {output.read2}
+            echo "Detected UMI in FASTQ read header; skipped split_barcode_LFR.py." > {output.log}
+        else
+            {params.python} {SCRIPT_DIR}/split_barcode_LFR.py \
+                --r1 {input.read1} \
+                --r2 {input.read2} \
+                --read_len {params.read_len} \
+                --output data/split_read \
+                --cbc_len {params.cbc_len} \
+                --bc_len_redundant {params.bc_len_redundant} \
+                --bc_start {params.bc_start} \
+                --gdna_start {params.gdna_start} \
+                --additional_bc_start {params.additional_bc_start} \
+                --additional_bc_len {params.additional_bc_len} \
+                --gdna_start_r1 {params.gdna_start_r1} \
+                --read_len_r1 {params.read_len_r1} \
+                --additional_bc_len_r1 {params.additional_bc_len_r1} \
+                --threads {threads} \
+                --pigz {params.pigz} \
+                2> data/split_stat_read.err
+        fi
         """
 
 

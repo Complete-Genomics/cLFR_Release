@@ -5,6 +5,8 @@ chroms:
   - chr1
 
 inputs:
+  # Input FASTQ files. If read headers already contain UMI/barcode strings,
+  # split_reads will skip barcode splitting automatically.
   read1: 
   read2: read_2.fq.gz
 
