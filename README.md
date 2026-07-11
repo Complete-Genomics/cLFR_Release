@@ -138,7 +138,7 @@ Key settings:
 - `mapping.ref_fasta`: optional mapping reference FASTA for `bwa` and `minimap2`; defaults to `paths.ref_fasta` when omitted. Do not set it for STAR/HISAT2 unless you also use it as documentation for the index source.
 - `mapping.star_index`: required when `mapping.mapper: star`.
 - `mapping.hisat2_index` and `mapping.hisat2_splicesites`: required when `mapping.mapper: hisat2`.
-- `mapping.minimap2_preset` and optional `mapping.minimap2_anno_bed`: used when `mapping.mapper: minimap2`.
+- `mapping.minimap2_preset` and optional `mapping.minimap2_anno_bed`: used when `mapping.mapper: minimap2`. For SE600 RNA/cDNA data, keep `minimap2_preset: splice:sr` so minimap2 uses spliced alignment semantics.
 - `tools.*`: executable paths. Defaults assume tools are available on `PATH` inside the conda environment.
 - `tools.gatk`: GATK executable used for `MarkDuplicates`.
 - `params.bc_condition`: duplicate barcode tag mode; `random_bc` uses `BX`, `standard` uses `BC`.

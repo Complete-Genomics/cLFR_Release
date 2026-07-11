@@ -174,7 +174,7 @@ rule map_reads:
         hisat2_index=config["mapping"].get("hisat2_index", ""),
         hisat2_splicesites=config["mapping"].get("hisat2_splicesites", ""),
         minimap2=config["tools"].get("minimap2", "minimap2"),
-        minimap2_preset=config["mapping"].get("minimap2_preset", "splice:sr"),
+        minimap2_preset=config["mapping"].get("minimap2_preset") or "splice:sr",
         minimap2_anno_bed=config["mapping"].get("minimap2_anno_bed", ""),
         minimap2_sort_mem=config["mapping"].get("minimap2_sort_mem", "2G"),
         samtools=config["tools"].get("samtools", "samtools"),
@@ -229,6 +229,8 @@ rule map_reads:
             fi
         elif [ "{params.mapper}" = "minimap2" ]; then
             SORT_TMP=/dev/shm/minimap_tmp_$$
+            echo "minimap2 samtools sort tmp: $SORT_TMP" >&2
+            echo "minimap2 preset: {params.minimap2_preset}" >&2
             mkdir -p $SORT_TMP
             bed_arg=""
             if [ -n "{params.minimap2_anno_bed}" ]; then
