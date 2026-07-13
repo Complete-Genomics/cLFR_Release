@@ -74,7 +74,7 @@ params:
   # Consensus generation already uses the pre-markdup BAM regardless of this
   # setting, so for bc_condition=random_bc/random_bc_umi_rc/pcrfree, enabling
   # this has no effect on consensus results.
-  skip_markdup: false
+  skip_markdup: true
 
   # Consensus generation.
   min_reads: 50
