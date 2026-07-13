@@ -284,6 +284,19 @@ rule mark_dups:
         """
 
 
+rule index_sort_bam:
+    input:
+        bam=f"{KEEP_ALIGN_DIR}/{{sample_id}}.sort.bam",
+    output:
+        bai=f"{KEEP_ALIGN_DIR}/{{sample_id}}.sort.bam.bai",
+    threads:
+        config["threads"].get("mapping", 16)
+    params:
+        samtools=config["tools"].get("samtools", "samtools"),
+    shell:
+        "{params.samtools} index -@ {threads} {input.bam} {output.bai}"
+
+
 rule index_mark_dups:
     input:
         bam=f"{KEEP_ALIGN_DIR}/{{sample_id}}.sort.markdup.bam",
@@ -301,6 +314,8 @@ rule remove_duplicates:
     input:
         bam=f"{KEEP_ALIGN_DIR}/{{sample_id}}.sort.markdup.bam",
         bai=f"{KEEP_ALIGN_DIR}/{{sample_id}}.sort.markdup.bam.bai",
+        prebam=f"{KEEP_ALIGN_DIR}/{{sample_id}}.sort.bam",
+        prebai=f"{KEEP_ALIGN_DIR}/{{sample_id}}.sort.bam.bai",
     output:
         bam=f"{OUTPUT_DIR}/{{sample_id}}.sort.removedup_rm000.bam",
         bai=f"{OUTPUT_DIR}/{{sample_id}}.sort.removedup_rm000.bam.bai",
@@ -313,8 +328,8 @@ rule remove_duplicates:
         """
         mkdir -p {OUTPUT_DIR}
         if [[ "{params.bc_condition}" == "random_bc" || "{params.bc_condition}" == "random_bc_umi_rc" || "{params.bc_condition}" == "pcrfree" ]]; then
-            ln -sf "$(realpath {input.bam})" {output.bam}
-            ln -sf "$(realpath {input.bai})" {output.bai}
+            ln -sf "$(realpath {input.prebam})" {output.bam}
+            ln -sf "$(realpath {input.prebai})" {output.bai}
         elif [[ "{params.bc_condition}" == *"standard"* ]]; then
             {params.samtools} view -@ {threads} -b -h -F 0x400 {input.bam} > {output.bam}
             {params.samtools} index -@ {threads} {output.bam} {output.bai}
