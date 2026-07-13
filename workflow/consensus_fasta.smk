@@ -271,10 +271,14 @@ rule mark_dups:
     params:
         gatk=config["tools"].get("gatk", "gatk"),
         bc_condition=config["params"].get("bc_condition", "random_bc"),
+        skip_markdup=config["params"].get("skip_markdup", False),
     shell:
         """
         mkdir -p {OUTPUT_DIR}
-        if [[ "{params.bc_condition}" == *"random_bc"* ]]; then
+        if [[ "{params.skip_markdup}" == "True" ]]; then
+            ln -sf "$(realpath {input.bam})" {output.bam}
+            : > {output.metrics}
+        elif [[ "{params.bc_condition}" == *"random_bc"* ]]; then
             {params.gatk} MarkDuplicates -I {input.bam} -O {output.bam} -BARCODE_TAG BX -M {output.metrics}
         elif [[ "{params.bc_condition}" == *"standard"* ]]; then
             {params.gatk} MarkDuplicates -I {input.bam} -O {output.bam} -BARCODE_TAG BC -M {output.metrics}

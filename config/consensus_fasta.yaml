@@ -69,6 +69,13 @@ params:
   additional_bc_len: 0
   additional_bc_len_r1: 0
 
+  # Skip GATK MarkDuplicates entirely (symlink sort.bam -> sort.markdup.bam
+  # instead of running it) to save time. No dedup metrics will be produced.
+  # Consensus generation already uses the pre-markdup BAM regardless of this
+  # setting, so for bc_condition=random_bc/random_bc_umi_rc/pcrfree, enabling
+  # this has no effect on consensus results.
+  skip_markdup: false
+
   # Consensus generation.
   min_reads: 50
   minreads_fasta: 100
