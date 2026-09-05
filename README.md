@@ -131,7 +131,7 @@ Key settings:
 
 - `inputs.read1/read2`: input FASTQ files. For single-end data, set `params.sequence_type: se`; `read1` may be blank, and the workflow processes `read2`. If the first `read2` FASTQ header already contains a UMI/barcode string such as `#ACGT.../2`, `split_reads` skips barcode splitting and uses the input FASTQ directly.
 - `chroms`: contigs to emit consensus FASTA from; names must match the mapping reference and BAM contigs.
-- `paths.output_dir`: main output directory, default `Align`.
+- `paths.output_dir`: alignment output directory, default `Align`. Consensus FASTA outputs are written to `./consensus` to match the upstream LFR_Pipeline layout.
 - `paths.ref_fasta`: genome FASTA used by `samtools consensus` during consensus generation. This is still required for consensus even when mapping uses STAR or HISAT2 indexes.
 - `paths.consensus_direction_ref_fasta`: optional FASTA used by minimap2 to infer consensus FASTA orientation; defaults to `paths.ref_fasta` when omitted.
 - `mapping.mapper`: one of `star`, `hisat2`, `minimap2`, or `bwa`.
@@ -161,7 +161,7 @@ snakemake -s ${smk} --cores ${num_cpu} -p -k 2> consensus.err.txt
 Main output:
 
 ```text
-Align/consensus/consensus.fixRC.fasta
+consensus/consensus.fixRC.fasta
 ```
 
 Additional outputs include:
@@ -174,11 +174,11 @@ keep/Align/{sample_id}.sort.markdup.bam
 Align/{sample_id}_dedup_metrics.txt
 Align/{sample_id}.sort.removedup_rm000.bam
 Make_Vcf/step3_hapcut/step1_modify_bam/{sample_id}_sort.markdup_{chrom}.bam
-Align/consensus/consensus.fasta
-Align/consensus/consensus.paf
-Align/consensus/frag_not_in_mapped.fixRC.fasta
-Align/consensus/consensus_frag_length_distribution.pdf
-Align/consensus/frag_length_distribution.txt
+consensus/consensus.fasta
+consensus/consensus.paf
+consensus/frag_not_in_mapped.fixRC.fasta
+consensus/consensus_frag_length_distribution.pdf
+consensus/frag_length_distribution.txt
 ```
 
 ## Notes
@@ -201,11 +201,11 @@ snakemake -s /path/to/cLFR_Release/workflow/consensus_fasta.smk --cores 1 -n
 Then run the workflow on a small FASTQ pair and confirm:
 
 ```text
-Align/consensus/consensus.fasta
-Align/consensus/consensus.paf
-Align/consensus/consensus.fixRC.fasta
-Align/consensus/consensus_frag_length_distribution.pdf
-Align/consensus/frag_length_distribution.txt
+consensus/consensus.fasta
+consensus/consensus.paf
+consensus/consensus.fixRC.fasta
+consensus/consensus_frag_length_distribution.pdf
+consensus/frag_length_distribution.txt
 ```
 
 ## Origin
