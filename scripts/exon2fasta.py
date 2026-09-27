@@ -59,7 +59,7 @@ def plot_length_distribution(lengths, outdir, name, cutoff, max_plot_len=DEFAULT
     else:
         plt.text(0.5, 0.5, "No FASTA records", ha="center", va="center")
 
-    plt.title(f"{name}_frag_length_distribution_N{cutoff}")
+    plt.title(f"{name}_frag_length_distribution_count{cutoff}")
     plt.xlabel("Fragment length")
     plt.ylabel("Count")
     plt.tight_layout()
