@@ -68,7 +68,7 @@ parser.add_argument("--downsample_ratio", type=float, default=1.0, required=Fals
 parser.add_argument("--batch_id", type=str, default="", required=False)
 parser.add_argument("--samtools", type=str, default="samtools", required=False)
 parser.add_argument("--stringtie", type=str, default="stringtie", required=False)
-parser.add_argument("--temp_dir", type=str, default="/dev/shm/consensus", required=False)
+parser.add_argument("--temp_dir", type=str, default="/dev/shm", required=False)
 parser.add_argument("--use_samtools_reference", action="store_true")
 
 args = parser.parse_args()
@@ -83,6 +83,7 @@ MIN_READS = args.min_reads
 DOWNSAMPLE_RATIO = args.downsample_ratio
 BATCH_ID = args.batch_id
 NUM_SPLITS = args.num_splits
+TEMP_DIR_PARENT = args.temp_dir
 
 # --- Configuration ---
 MIN_FRAG_LEN = 400
@@ -98,10 +99,14 @@ log_samtools_runtime(SAMTOOLS_PATH, SAMTOOLS_CONSENSUS_HAS_REF, SAMTOOLS_CONSENS
 EMPTY_CONSENSUS_COUNT = 0
 
 # MIN_READS = 50
-# 使用一个唯一的临时目录，确保不会与其他进程冲突
-def make_temp_dir(preferred_root, chrom, split_index, batch_id):
-    fallback_root = os.path.join(tempfile.gettempdir(), "consensus")
-    for base_dir in (preferred_root, fallback_root):
+# temp_dir is a parent directory: /dev/shm -> /dev/shm/consensus_tmp_<pid>,
+# ./Align -> ./Align/consensus_tmp_<pid>.
+TEMP_DIR_NAME = f"consensus_tmp_{os.getpid()}"
+TEMP_BASE_DIR = os.path.join((TEMP_DIR_PARENT or "/dev/shm").rstrip(os.sep), TEMP_DIR_NAME)
+
+def make_temp_dir(chrom, split_index, batch_id):
+    fallback_root = os.path.join(tempfile.gettempdir(), TEMP_DIR_NAME, "consensus")
+    for base_dir in (TEMP_BASE_DIR, fallback_root):
         temp_dir = (
             os.path.join(base_dir, batch_id, f"{chrom}_{split_index}")
             if batch_id else os.path.join(base_dir, f"{chrom}_{split_index}")
@@ -115,7 +120,8 @@ def make_temp_dir(preferred_root, chrom, split_index, batch_id):
             sys.stderr.write(f"WARNING: Could not use temp directory {temp_dir}: {error}\n")
     raise OSError("No writable temporary directory available for consensus generation")
 
-TEMP_DIR = make_temp_dir(args.temp_dir, chrom, split_index, BATCH_ID)
+TEMP_DIR = make_temp_dir(chrom, split_index, BATCH_ID)
+sys.stderr.write(f"Using consensus temp directory: {TEMP_DIR}\n")
 current_temp_dir = TEMP_DIR
 
 # --- Global variable for FASTA reference ---
